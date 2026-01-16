@@ -1,0 +1,199 @@
+
+
+:root {
+    --amarillo-barbon: #FCC12B;
+    --negro: #111;
+    --gris-fondo: #f4f4f4;
+    --blanco: #ffffff;
+}
+
+/* =====================
+   RESET
+===================== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--gris-fondo);
+    color: var(--negro);
+}
+
+/* =====================
+   HEADER / LOGO
+===================== */
+.logo {
+    background: var(--amarillo-barbon);
+    text-align: center;
+    padding: 20px 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.logo img {
+    max-width: 300px;        /* ⬅️ MÁS GRANDE */
+    width: 100%;
+    height: auto;
+    margin: 0 auto;
+    display: block;
+}
+
+/* =====================
+   CONTENEDOR
+===================== */
+section {
+    max-width: 420px;
+    margin: auto;
+    padding: 14px;
+}
+
+/* =====================
+   TITULOS
+===================== */
+h2 {
+    font-size: 18px;
+    margin: 22px 0 10px;
+    font-weight: 800;
+}
+
+/* =====================
+   CARD PRODUCTO
+===================== */
+.producto {
+    background: var(--blanco);
+    border-radius: 16px;
+    padding: 12px;
+    margin-bottom: 14px;
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 12px;
+    align-items: center;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+}
+
+/* =====================
+   IMAGEN
+===================== */
+.producto-img img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+/* =====================
+   INFO
+===================== */
+.producto-info {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.producto-info strong {
+    font-size: 15px;
+    font-weight: 800;
+}
+
+.precio {
+    background: var(--amarillo-barbon);
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-weight: 900;
+    font-size: 14px;
+    width: fit-content;
+}
+
+.stock {
+    font-size: 12px;
+    color: #666;
+}
+
+/* =====================
+   CONTADOR
+===================== */
+.contador {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.contador button {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: var(--amarillo-barbon);
+    color: #111;
+    font-size: 20px;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+}
+
+.contador button:hover {
+    transform: scale(1.1);
+}
+
+
+.contador input {
+    width: 38px;
+    height: 32px;
+    text-align: center;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+}
+
+/* =====================
+   BOTÓN PRINCIPAL
+===================== */
+.btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    border: none;
+    font-size: 16px;
+    font-weight: 900;
+    background: var(--amarillo-barbon);
+    cursor: pointer;
+    margin: 20px 0;
+}
+
+/* =====================
+   MOBILE
+===================== */
+@media (max-width: 600px) {
+    .producto {
+        grid-template-columns: 1fr;
+    }
+
+    .producto-img img {
+        height: 180px;
+    }
+
+    .logo img {
+        max-width: 200px;   /* ⬅️ aún más grande en móvil */
+    }
+}
+
+/* =====================
+   DESKTOP
+===================== */
+@media (min-width: 768px) {
+    section {
+        max-width: 900px;
+    }
+
+    .producto {
+        grid-template-columns: 160px 1fr;
+    }
+
+    .producto-img img {
+        height: 140px;
+    }
+}

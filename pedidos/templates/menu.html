@@ -1,0 +1,195 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Las Guesas del Barbón</title>
+    <link rel="stylesheet" href="{% static 'pedidos/css/styles.css' %}">
+</head>
+
+<body>
+
+<header class="logo">
+    <img src="{% static 'pedidos/img/barbon.jpg' %}" alt="Logo">
+</header>
+
+<section>
+
+<form method="post">
+{% csrf_token %}
+
+{% if error %}
+<p style="color:red; font-weight:bold; margin-bottom:10px;">
+    {{ error }}
+</p>
+{% endif %}
+
+<!-- 🍔 GUESAS -->
+<h2>🍔 Guesas</h2>
+
+{% for p in hamburguesas %}
+<div class="producto">
+
+    <!-- IMAGEN -->
+    <div class="producto-img">
+        {% if p.nombre == "La Mañosa" %}
+            <img src="{% static 'pedidos/img/la_manosa.jpg' %}">
+        {% elif p.nombre == "La del Proceso" %}
+            <img src="{% static 'pedidos/img/la_del_proceso.jpg' %}">
+        {% elif p.nombre == "La Tóxica" %}
+            <img src="{% static 'pedidos/img/la_toxica.jpg' %}">
+        {% elif p.nombre == "La Bipolar" %}
+            <img src="{% static 'pedidos/img/la_bipolar.jpg' %}">
+        {% endif %}
+    </div>
+
+    <!-- INFO -->
+    <div class="producto-info">
+        <strong>{{ p.nombre }}</strong>
+        <span class="precio">$ {{ p.precio }}</span>
+
+        {% if p.descripcion %}
+            <em>{{ p.descripcion }}</em>
+        {% endif %}
+
+        <span class="stock">Stock disponible: {{ p.stock }}</span>
+
+        <div class="contador">
+            <button type="button" onclick="menos('{{ p.id }}')">−</button>
+            <input
+                type="number"
+                id="cantidad-{{ p.id }}"
+                name="cantidad_{{ p.id }}"
+                value="0"
+                readonly
+            >
+            <button type="button" onclick="mas('{{ p.id }}', {{ p.stock }})">+</button>
+        </div>
+    </div>
+
+</div>
+{% endfor %}
+
+<!-- ➕ EXTRAS -->
+<h2>➕ Extras</h2>
+
+{% for e in extras %}
+<div class="producto sin-imagen">
+    <div class="producto-info">
+        <strong>{{ e.nombre }}</strong>
+        <span class="precio">$ {{ e.precio }}</span>
+        <span class="stock">Stock: {{ e.stock }}</span>
+
+        <div class="contador">
+            <button type="button" onclick="menos('{{ e.id }}')">−</button>
+            <input
+                id="cantidad-{{ e.id }}"
+                name="cantidad_{{ e.id }}"
+                value="0"
+                readonly
+            >
+            <button type="button" onclick="mas('{{ e.id }}', {{ e.stock }})">+</button>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- 🍟 PAPAS -->
+<h2>🍟 Papas</h2>
+
+{% for p in papas %}
+<div class="producto con-imagen">
+
+    <div class="producto-img">
+        {% if "tocino" in p.nombre|lower %}
+            <img src="{% static 'pedidos/img/papas_tocino.jpg' %}">
+        {% else %}
+            <img src="{% static 'pedidos/img/papas_fritas.png' %}">
+        {% endif %}
+    </div>
+
+    <div class="producto-info">
+        <strong>{{ p.nombre }}</strong>
+        <span class="precio">$ {{ p.precio }}</span>
+        <span class="stock">Stock: {{ p.stock }}</span>
+
+        <div class="contador">
+            <button type="button" onclick="menos('{{ p.id }}')">−</button>
+            <input
+                id="cantidad-{{ p.id }}"
+                name="cantidad_{{ p.id }}"
+                value="0"
+                readonly
+            >
+            <button type="button" onclick="mas('{{ p.id }}', {{ p.stock }})">+</button>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- 🥤 BEBIDAS -->
+<h2>🥤 Bebidas</h2>
+
+{% for b in bebidas %}
+<div class="producto con-imagen">
+
+    <div class="producto-img">
+        <img src="{% static 'pedidos/img/coca_cola.jpg' %}">
+    </div>
+
+    <div class="producto-info">
+        <strong>{{ b.nombre }}</strong>
+        <span class="precio">$ {{ b.precio }}</span>
+        <span class="stock">Stock: {{ b.stock }}</span>
+
+        <div class="contador">
+            <button type="button" onclick="menos('{{ b.id }}')">−</button>
+            <input
+                id="cantidad-{{ b.id }}"
+                name="cantidad_{{ b.id }}"
+                value="0"
+                readonly
+            >
+            <button type="button" onclick="mas('{{ b.id }}', {{ b.stock }})">+</button>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<!-- 📋 DATOS DEL CLIENTE -->
+<h2>📋 Tus datos</h2>
+
+<div class="producto sin-imagen">
+    <div class="producto-info">
+        <input type="text" name="nombre_cliente" placeholder="Tu nombre" required>
+        <input type="text" name="telefono" placeholder="Tu teléfono" required>
+    </div>
+</div>
+
+<button class="btn" type="submit">🧾 Enviar pedido</button>
+
+</form>
+
+{% if telegram_link %}
+<a href="{{ telegram_link }}" target="_blank">
+    <button type="button" class="btn telegram-btn">
+        👉 Continuar pedido en Telegram
+    </button>
+</a>
+{% endif %}
+
+</section>
+
+<script>
+function mas(id, stock){
+    const i = document.getElementById("cantidad-" + id);
+    if(i && +i.value < stock) i.value++;
+}
+function menos(id){
+    const i = document.getElementById("cantidad-" + id);
+    if(i && +i.value > 0) i.value--;
+}
+</script>
+
+</body>
+</html>
