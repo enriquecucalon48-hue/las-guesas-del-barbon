@@ -1,3 +1,4 @@
+import os
 from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 
@@ -7,9 +8,9 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         User = get_user_model()
 
-        username = "admin"
-        password = "karma593"
-        email = "davidcorso428@gmail.com"
+        username = os.getenv("ADMIN_USERNAME")
+        password = os.getenv("ADMIN_PASSWORD")
+        email = os.getenv("ADMIN_EMAIL")
 
         if not User.objects.filter(username=username).exists():
             User.objects.create_superuser(
