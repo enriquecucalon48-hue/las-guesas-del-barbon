@@ -25,8 +25,7 @@ load_dotenv()
 # BASE DIR
 # =========================
 
-BASE_DIR = Path(_file_).resolve().parent.parent
-
+BASE_DIR = Path(__file__).resolve().parent.parent
 # =========================
 # SEGURIDAD
 # =========================
