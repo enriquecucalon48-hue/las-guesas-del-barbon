@@ -1,4 +1,5 @@
-
+import os
+from dotenv import load_dotenv
 import asyncio
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart, StateFilter
@@ -8,8 +9,8 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 # ================= CONFIGURACIÓN =================
 
-BOT_TOKEN = "8297994355:AAGeA6LDEOvKimbM8Ktr0R9wRpmvHwVe53M"
-GRUPO_ID = -5087703492   # ← TU ID DE GRUPO (ya dijiste que lo tienes)
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+GRUPO_ID =  os.getenv("GRUPO_ID")
 
 # ================= BOT =================
 
