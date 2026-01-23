@@ -1,9 +1,5 @@
 from django.db import models
 
-# Create your models here.
-from django.db import models
-
-
 # -------------------------
 # Producto
 # -------------------------
@@ -35,6 +31,7 @@ class Pedido(models.Model):
     total = models.DecimalField(max_digits=8, decimal_places=2)
     nombre_cliente = models.CharField(max_length=100, blank=True)
     telefono = models.CharField(max_length=20, blank=True)
+    direccion = models.TextField(blank=True, null=True)  # ✅ AQUÍ
     confirmado = models.BooleanField(default=False)
     entregado = models.BooleanField(default=False)
 
@@ -56,5 +53,3 @@ class PedidoItem(models.Model):
 
     def __str__(self):
         return f"{self.cantidad} x {self.producto.nombre}"
-
-direccion = models.TextField(blank=True, null=True)
