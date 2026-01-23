@@ -1,36 +1,60 @@
 import os
-from dotenv import load_dotenv
 import asyncio
+from dotenv import load_dotenv
+
+import aiohttp
 from aiogram import Bot, Dispatcher, types, F
 from aiogram.filters import CommandStart, StateFilter
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
 
-# ================= CONFIGURACIÓN =================
+
+# =========================
+# CARGAR VARIABLES .env
+# =========================
+
+load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-GRUPO_ID =  os.getenv("GRUPO_ID")
+GRUPO_ID = int(os.getenv("GRUPO_ID", "0"))
 
-# ================= BOT =================
+URL_CONFIRMAR_PEDIDO = os.getenv(
+    "URL_CONFIRMAR_PEDIDO",
+    "https://las-guesas-del-barbon.onrender.com/bot/confirmar/"
+)
+
+if not BOT_TOKEN:
+    raise RuntimeError("❌ BOT_TOKEN no está definido en el .env")
+
+
+# =========================
+# BOT
+# =========================
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 
-# ================= ESTADOS =================
+
+# =========================
+# ESTADOS
+# =========================
 
 class PedidoState(StatesGroup):
     esperando_direccion = State()
     esperando_comprobante = State()
     esperando_confirmacion = State()
 
-# ================= START =================
+
+# =========================
+# /start
+# =========================
 
 @dp.message(CommandStart())
 async def start(message: types.Message, state: FSMContext):
     texto = message.text or ""
 
-    # Si viene desde la web
+    # Si viene desde la web con pedido_id
     if "pedido_" in texto:
         pedido_id = texto.split("pedido_")[-1]
 
@@ -50,7 +74,10 @@ async def start(message: types.Message, state: FSMContext):
             parse_mode="Markdown"
         )
 
-# ================= DIRECCIÓN =================
+
+# =========================
+# DIRECCIÓN
+# =========================
 
 @dp.message(StateFilter(PedidoState.esperando_direccion))
 async def recibir_direccion(message: types.Message, state: FSMContext):
@@ -69,7 +96,10 @@ async def recibir_direccion(message: types.Message, state: FSMContext):
 
     await state.set_state(PedidoState.esperando_comprobante)
 
-# ================= COMPROBANTE =================
+
+# =========================
+# COMPROBANTE
+# =========================
 
 @dp.message(StateFilter(PedidoState.esperando_comprobante), F.photo)
 async def recibir_comprobante(message: types.Message, state: FSMContext):
@@ -85,7 +115,7 @@ async def recibir_comprobante(message: types.Message, state: FSMContext):
         f"👤 Cliente: {message.from_user.full_name}"
     )
 
-    # Enviar foto al grupo
+    # Enviar comprobante al grupo
     await bot.send_photo(
         chat_id=GRUPO_ID,
         photo=message.photo[-1].file_id,
@@ -95,10 +125,12 @@ async def recibir_comprobante(message: types.Message, state: FSMContext):
 
     teclado = types.InlineKeyboardMarkup(
         inline_keyboard=[
-            [types.InlineKeyboardButton(
-                text="✅ Confirmar pedido",
-                callback_data="confirmar_pedido"
-            )]
+            [
+                types.InlineKeyboardButton(
+                    text="✅ Confirmar pedido",
+                    callback_data="confirmar_pedido"
+                )
+            ]
         ]
     )
 
@@ -111,11 +143,19 @@ async def recibir_comprobante(message: types.Message, state: FSMContext):
 
     await state.set_state(PedidoState.esperando_confirmacion)
 
-# ================= CONFIRMAR =================
+
+# =========================
+# CONFIRMAR PEDIDO
+# =========================
 
 @dp.callback_query(F.data == "confirmar_pedido")
 async def confirmar_pedido(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
+    pedido_id = data.get("pedido_id")
+
+    # Avisar a Django
+    async with aiohttp.ClientSession() as session:
+        await session.get(f"{URL_CONFIRMAR_PEDIDO}{pedido_id}/")
 
     await callback.message.answer(
         "🎉 *Pedido confirmado*\n"
@@ -128,7 +168,7 @@ async def confirmar_pedido(callback: types.CallbackQuery, state: FSMContext):
         chat_id=GRUPO_ID,
         text=(
             "🍔 *PEDIDO CONFIRMADO*\n\n"
-            f"🧾 Pedido ID: {data.get('pedido_id')}\n"
+            f"🧾 Pedido ID: {pedido_id}\n"
             f"📍 Dirección: {data.get('direccion')}"
         ),
         parse_mode="Markdown"
@@ -137,11 +177,15 @@ async def confirmar_pedido(callback: types.CallbackQuery, state: FSMContext):
     await state.clear()
     await callback.answer()
 
-# ================= MAIN =================
+
+# =========================
+# MAIN
+# =========================
 
 async def main():
     print("🤖 Bot iniciado correctamente")
     await dp.start_polling(bot)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

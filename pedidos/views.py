@@ -1,6 +1,11 @@
 from django.shortcuts import render
+from django.http import JsonResponse
 from .models import Producto, Pedido, PedidoItem
 
+
+# =========================
+# VISTAS WEB
+# =========================
 
 def inicio(request):
     return render(request, "inicio.html")
@@ -27,7 +32,7 @@ def menu(request):
             total = 0
             items = []
 
-            # 1️⃣ calcular total y guardar items temporalmente
+            # Calcular total y guardar items
             for producto in productos:
                 cantidad = int(request.POST.get(f"cantidad_{producto.id}", 0))
 
@@ -38,20 +43,20 @@ def menu(request):
                     items.append({
                         "producto": producto,
                         "cantidad": cantidad,
-                        "precio": producto.precio
+                        "precio": producto.precio,
                     })
 
             if total == 0:
                 error = "Debes seleccionar al menos un producto"
             else:
-                # 2️⃣ crear pedido CON total
+                # Crear pedido
                 pedido = Pedido.objects.create(
                     nombre_cliente=nombre_cliente,
                     telefono=telefono,
                     total=total
                 )
 
-                # 3️⃣ crear los items
+                # Crear items del pedido
                 for item in items:
                     PedidoItem.objects.create(
                         pedido=pedido,
@@ -60,7 +65,10 @@ def menu(request):
                         precio=item["precio"]
                     )
 
-                telegram_link = f"https://t.me/Las_guesas_del_BarbonBot?start=pedido_{pedido.id}"
+                # Link al bot de Telegram
+                telegram_link = (
+                    f"https://t.me/Las_guesas_del_BarbonBot?start=pedido_{pedido.id}"
+                )
 
     context = {
         "hamburguesas": hamburguesas,
@@ -72,9 +80,34 @@ def menu(request):
     }
 
     return render(request, "menu.html", context)
-from django.http import JsonResponse
-from .models import Pedido, PedidoItem
 
+
+# =========================
+# CONFIRMAR PEDIDO DESDE TELEGRAM
+# =========================
+
+def confirmar_pedido_bot(request, pedido_id):
+    try:
+        pedido = Pedido.objects.get(id=pedido_id)
+        pedido.confirmado = True
+        pedido.save()
+
+        return JsonResponse({
+            "ok": True,
+            "mensaje": "Pedido confirmado"
+        })
+
+    except Pedido.DoesNotExist:
+        return JsonResponse(
+            {"error": "Pedido no encontrado"},
+            status=404
+        )
+
+
+
+# =========================
+# API PARA EL BOT
+# =========================
 
 def api_pedido(request, pedido_id):
     """
@@ -86,14 +119,15 @@ def api_pedido(request, pedido_id):
     except Pedido.DoesNotExist:
         return JsonResponse({"error": "Pedido no encontrado"}, status=404)
 
-    items = []
-    for item in PedidoItem.objects.filter(pedido=pedido):
-        items.append({
+    items = [
+        {
             "producto": item.producto.nombre,
             "cantidad": item.cantidad,
             "precio": float(item.precio),
             "subtotal": float(item.cantidad * item.precio),
-        })
+        }
+        for item in PedidoItem.objects.filter(pedido=pedido)
+    ]
 
     data = {
         "id": pedido.id,
@@ -101,6 +135,8 @@ def api_pedido(request, pedido_id):
         "telefono": pedido.telefono,
         "total": float(pedido.total),
         "items": items,
+        "confirmado": pedido.confirmado,
+        "entregado": pedido.entregado,
     }
 
     return JsonResponse(data)
