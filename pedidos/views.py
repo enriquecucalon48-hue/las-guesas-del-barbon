@@ -100,3 +100,9 @@ def api_pedido(request, pedido_id):
         "confirmado": pedido.confirmado,
         "entregado": pedido.entregado,
     })
+@csrf_exempt
+def marcar_entregado_bot(request, pedido_id):
+    pedido = Pedido.objects.get(id=pedido_id)
+    pedido.entregado = True
+    pedido.save()
+    return JsonResponse({"ok": True})
