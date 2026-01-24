@@ -10,7 +10,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
 
 # =========================
-# CARGAR .env
+# CARGAR VARIABLES .env
 # =========================
 
 load_dotenv()
@@ -26,6 +26,11 @@ URL_GUARDAR_CHAT = os.getenv(
 URL_CONFIRMAR_PEDIDO = os.getenv(
     "URL_CONFIRMAR_PEDIDO",
     "https://las-guesas-del-barbon.onrender.com/bot/confirmar/"
+)
+
+URL_ENTREGAR_PEDIDO = os.getenv(
+    "URL_ENTREGAR_PEDIDO",
+    "https://las-guesas-del-barbon.onrender.com/bot/entregado/"
 )
 
 if not BOT_TOKEN:
@@ -58,7 +63,7 @@ async def start(message: types.Message, state: FSMContext):
     if "pedido_" in texto:
         pedido_id = texto.split("pedido_")[-1]
 
-        # 🔐 Guardar chat_id en Django
+        # Guardar chat_id en Django
         async with aiohttp.ClientSession() as session:
             await session.post(
                 f"{URL_GUARDAR_CHAT}{pedido_id}/",
@@ -116,24 +121,27 @@ async def recibir_comprobante(message: types.Message, state: FSMContext):
         photo=message.photo[-1].file_id,
         caption=(
             "🧾 *COMPROBANTE DE PAGO*\n\n"
-            f"Pedido ID: {pedido_id}\n"
-            f"Dirección: {direccion}"
+            f"🆔 Pedido ID: {pedido_id}\n"
+            f"📍 Dirección: {direccion}"
         ),
         parse_mode="Markdown"
     )
 
-    teclado = types.InlineKeyboardMarkup(
+    teclado_confirmar = types.InlineKeyboardMarkup(
         inline_keyboard=[
-            [types.InlineKeyboardButton(
-                text="✅ Confirmar pedido",
-                callback_data="confirmar_pedido"
-            )]
+            [
+                types.InlineKeyboardButton(
+                    text="✅ Confirmar pedido",
+                    callback_data="confirmar_pedido"
+                )
+            ]
         ]
     )
 
     await message.answer(
-        "✅ Comprobante recibido",
-        reply_markup=teclado
+        "✅ *Comprobante recibido*",
+        reply_markup=teclado_confirmar,
+        parse_mode="Markdown"
     )
 
     await state.set_state(PedidoState.esperando_confirmacion)
@@ -150,6 +158,28 @@ async def confirmar_pedido(callback: types.CallbackQuery, state: FSMContext):
     async with aiohttp.ClientSession() as session:
         await session.get(f"{URL_CONFIRMAR_PEDIDO}{pedido_id}/")
 
+    teclado_entregado = types.InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                types.InlineKeyboardButton(
+                    text="📦 Marcar como entregado",
+                    callback_data=f"entregado_{pedido_id}"
+                )
+            ]
+        ]
+    )
+
+    await bot.send_message(
+        chat_id=GRUPO_ID,
+        text=(
+            "🎉 *Pedido confirmado*\n"
+            f"🆔 Pedido ID: {pedido_id}\n"
+            "🟡 En preparación"
+        ),
+        reply_markup=teclado_entregado,
+        parse_mode="Markdown"
+    )
+
     await callback.message.answer(
         "🎉 *Pedido confirmado*\n🟡 En preparación",
         parse_mode="Markdown"
@@ -157,6 +187,24 @@ async def confirmar_pedido(callback: types.CallbackQuery, state: FSMContext):
 
     await state.clear()
     await callback.answer()
+
+# =========================
+# MARCAR COMO ENTREGADO
+# =========================
+
+@dp.callback_query(F.data.startswith("entregado_"))
+async def marcar_entregado(callback: types.CallbackQuery):
+    pedido_id = callback.data.split("_")[1]
+
+    async with aiohttp.ClientSession() as session:
+        await session.get(f"{URL_ENTREGAR_PEDIDO}{pedido_id}/")
+
+    await callback.message.edit_text(
+        f"📦 *Pedido {pedido_id} ENTREGADO* ✅",
+        parse_mode="Markdown"
+    )
+
+    await callback.answer("Pedido marcado como entregado ✅")
 
 # =========================
 # MAIN
