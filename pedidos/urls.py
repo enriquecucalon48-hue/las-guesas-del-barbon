@@ -12,5 +12,5 @@ urlpatterns = [
 
     path("bot/confirmar/<int:pedido_id>/", confirmar_pedido_bot, name="confirmar_pedido_bot"),
     path("bot/guardar-chat/<int:pedido_id>/", guardar_chat_id, name="guardar_chat_id"),
-    path("bot/entregado/<int:pedido_id>/", marcar_entregado_bot())
+    path("bot/entregado/<int:pedido_id>/", marcar_entregado_bot),
 ]
